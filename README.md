@@ -6,6 +6,34 @@ Hapi plugin to expose health and metrics endpoint for kubernetes or other orches
 
 Works with Hapi v17 or higher
 
+## Installation
+
+`npm i hapi-k8s-health`
+
+In your code:
+
+```typescript
+import { Server } from '@hapi/hapi'
+import { HealthPlugin } from 'hapi-k8s-health'
+
+
+const server = new Server({
+    port: 8080
+})
+
+server.register({
+    plugin: HealthPlugin,
+    options: options: {
+      livenessProbes: {
+        status: () => Promise.resolve('Yeah !')
+      },
+      readinessProbes: {
+        sequelize: () => container.sequelize.authenticate()
+      }
+    }
+})
+```
+
 ## Features
 
 ### Metrics endpoint
