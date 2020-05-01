@@ -1,5 +1,7 @@
 # hapi-k8s-health
 
+[![npm version](https://badge.fury.io/js/hapi-k8s-health.svg)](https://badge.fury.io/js/hapi-k8s-health)
+
 Hapi plugin to expose health and metrics endpoint for kubernetes or other orchestration platform
 
 ## Requirements
