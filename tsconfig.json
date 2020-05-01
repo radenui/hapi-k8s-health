@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "allowSyntheticDefaultImports": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitAny": false,
+    "outDir": "./dist",
+    "strict": true,
+    "target": "ES2019", // Node > 12.9 does not include 100% of ES2020, add it with lib option
+    "types": ["node", "mocha"],
+    "lib": ["ES2020", "dom"]
+  },
+  "include": [
+    "./src/**/*.ts"
+  ]
+}
