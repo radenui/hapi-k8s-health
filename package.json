@@ -1,6 +1,6 @@
 {
   "name": "hapi-k8s-health",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Hapi plugin for k8s metrics and health check",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
