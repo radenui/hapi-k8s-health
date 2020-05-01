@@ -14,12 +14,12 @@ Exposes [Prometheus](https://prometheus.io/) formatted metrics for http requests
 
 #### http metrics
 
-- **http_request_count**: [Counter](https://github.com/siimon/prom-client#counter) total http requests by
+- **http_request_count**: [Counter](https://github.com/siimon/prom-client#counter) total http requests by:
     - path
     - method
     - returned http code
 
-- **http_current_request_count**: [Gauge](https://github.com/siimon/prom-client#gauge) number of http requests currently running by
+- **http_current_request_count**: [Gauge](https://github.com/siimon/prom-client#gauge) number of http requests currently running by:
     - method
 
 - **http_request_duration_seconds**: [Histogram](https://github.com/siimon/prom-client#histogram) histogram of http requests duration in seconds by:
