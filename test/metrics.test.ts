@@ -253,4 +253,24 @@ http_request_count{method="get",status_code="200",path="/monitored"} 1
       expect(register.getSingleMetric('http_request_count')).to.be.undefined
     })
   })
+  describe('with custom metrics naming', () => {
+    const httpServer: StubbedHttpServerForTesting = new StubbedHttpServerForTesting({
+      metricsName: {
+        requestCounter: 'my_custom_http_requests_counter',
+        requestDurationHistogram: 'how_long_did_my_requests_took'
+      }
+    })
+    let response: supertest.Response
+    it('should return 200 when calling /metrics', async () => {
+      response = await httpServer.api().get('/metrics')
+      expect(response.status).to.equal(200)
+    })
+    it('should return default nodejs metrics', async () => {
+      await httpServer.api().get('/')
+      response = await httpServer.api().get('/metrics')
+      expect(response.text).to.contain('# TYPE how_long_did_my_requests_took histogram')
+      expect(response.text).to.contain('my_custom_http_requests_counter{method="get",status_code="200",path="/"} 1')
+      expect(response.text).to.contain('http_current_request_count{method="get"} 1')
+    })
+  })
 })

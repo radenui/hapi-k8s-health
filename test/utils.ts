@@ -14,7 +14,7 @@ export const port = process.env.TEST_PORT || 9876
 
 export { expect }
 
-export function initServer (pluginOptions: Partial<HealthPluginOptions>): Server {
+export async function initServer (pluginOptions: Partial<HealthPluginOptions>): Promise<Server> {
   const routes: ServerRoute[] = [
     {
       path: '/unmonitored',
@@ -80,7 +80,9 @@ export function initServer (pluginOptions: Partial<HealthPluginOptions>): Server
   const server = new Server({
     port
   })
-
+  await server.register(require('@hapi/basic'))
+  await addStrategy(server, 'alice')
+  await addStrategy(server, 'bob')
   server.register({
     plugin: HealthPlugin,
     options: pluginOptions
@@ -119,4 +121,12 @@ export class StubbedHttpServerForTesting implements HttpServerForTesting {
     }
     throw new Error('server not initialized')
   }
+}
+
+async function addStrategy (server: Server, name: string): Promise<void> {
+  const validate = async (_, username) => {
+    const credentials = { id: username }
+    return username === name ? { isValid: true, credentials } : { isValid: false }
+  }
+  server.auth.strategy(name, 'basic', { validate })
 }
