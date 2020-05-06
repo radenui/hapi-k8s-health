@@ -32,8 +32,14 @@ export interface HealthPluginOptions {
   exposeReadiness: boolean,
   exposeMetrics: boolean,
   probesSuccessCode: number,
+  probesErrorCode: number,
   auth: AuthType | AuthObject,
-  probesErrorCode: number
+  metricsName: {
+    requestCounter?: string,
+    requestSummary?: string,
+    requestDurationHistogram?: string,
+    currentRequests?: string
+  }
 }
 
 const defaultOptions: HealthPluginOptions = {
@@ -55,8 +61,14 @@ const defaultOptions: HealthPluginOptions = {
   readinessRoute: '/readiness',
   metricsRoute: '/metrics',
   probesErrorCode: 500,
+  probesSuccessCode: 200,
   auth: false,
-  probesSuccessCode: 200
+  metricsName: {
+    requestCounter: 'http_request_count',
+    requestSummary: 'http_request_duration_ms',
+    requestDurationHistogram: 'http_request_duration_seconds',
+    currentRequests: 'http_current_request_count'
+  }
 }
 
 const pkg = require('../package.json')
@@ -68,7 +80,15 @@ export const HealthPlugin: Plugin<Partial<HealthPluginOptions>> = {
   register: async function (server, options: Partial<HealthPluginOptions> = {}) {
     const config: HealthPluginOptions = {
       ...defaultOptions,
-      ...options
+      ...options,
+      defaultMetricsOptions: {
+        ...defaultOptions.defaultMetricsOptions,
+        ...(options.defaultMetricsOptions || {})
+      },
+      metricsName: {
+        ...defaultOptions.metricsName,
+        ...(options.metricsName || {})
+      }
     }
 
     const currentRegister = config.prometheusRegister
@@ -77,33 +97,37 @@ export const HealthPlugin: Plugin<Partial<HealthPluginOptions>> = {
     if (config.exposeMetrics) {
       if (config.collectDefaultMetrics) {
         collectDefaultMetrics({
-          ...(config.defaultMetricsOptions || {}),
+          ...config.defaultMetricsOptions,
           register: currentRegister
         })
       }
 
       const requestCounter = new Counter<'method' | 'path' | 'status_code'>({
-        name: 'http_request_count',
+        // @ts-ignore => default value set even if not passed into options
+        name: config.metricsName.requestCounter,
         help: 'Total number of http requests',
         labelNames: ['method', 'status_code', 'path'],
         registers: [currentRegister]
       })
       const requestSummary = new Summary<'method' | 'path' | 'status_code'>({
-        name: 'http_request_duration_ms',
+        // @ts-ignore => default value set even if not passed into options
+        name: config.metricsName.requestSummary,
         help: 'Duration of http requests',
         labelNames: ['method', 'status_code', 'path'],
         aggregator: 'average',
         registers: [currentRegister]
       })
       const requestDurationHistogram = new Histogram<'method' | 'path' | 'status_code'>({
-        name: 'http_request_duration_seconds',
+        // @ts-ignore => default value set even if not passed into options
+        name: config.metricsName.requestDurationHistogram,
         help: 'Duration of http requests',
         labelNames: ['method', 'status_code', 'path'],
         aggregator: 'average',
         registers: [currentRegister]
       })
       const currentRequests = new Gauge<'method' | 'path'>({
-        name: 'http_current_request_count',
+        // @ts-ignore => default value set even if not passed into options
+        name: config.metricsName.currentRequests,
         help: 'Number of requests currently running',
         labelNames: ['method'],
         registers: [currentRegister]
