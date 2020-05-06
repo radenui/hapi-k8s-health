@@ -1,12 +1,20 @@
-import { Plugin, ResponseToolkit, ResponseObject, RequestRoute } from '@hapi/hapi'
+import { Plugin, ResponseToolkit, ResponseObject, RequestRoute, RouteOptionsAccess } from '@hapi/hapi'
 import { register, Registry, collectDefaultMetrics, Counter, Summary, Gauge, Histogram } from 'prom-client'
 import { Boom } from '@hapi/boom'
 
+type AuthType = false | string | RouteOptionsAccess
+
+interface AuthObject {
+  liveness: AuthType
+  readiness: AuthType
+  metrics: AuthType
+}
+
 export interface HealthPluginOptions {
   prometheusRegister: Registry,
-  collectDefaultMetrics: boolean
+  collectDefaultMetrics: boolean,
   defaultMetricsOptions: {
-    prefix?: string
+    prefix?: string,
     gcDurationBuckets?: number[]
   },
   readinessProbes: {
@@ -15,15 +23,16 @@ export interface HealthPluginOptions {
   livenessProbes: {
     [key: string]: () => Promise<string | void>
   },
-  livenessRoute: string
-  readinessRoute: string
+  livenessRoute: string,
+  readinessRoute: string,
   metricsRoute: string,
-  monitorProbes: boolean
-  monitorAllRoutesByDefault: boolean
-  exposeLiveness: boolean
-  exposeReadiness: boolean
+  monitorProbes: boolean,
+  monitorAllRoutesByDefault: boolean,
+  exposeLiveness: boolean,
+  exposeReadiness: boolean,
   exposeMetrics: boolean,
   probesSuccessCode: number,
+  auth: AuthType | AuthObject,
   probesErrorCode: number
 }
 
@@ -46,6 +55,7 @@ const defaultOptions: HealthPluginOptions = {
   readinessRoute: '/readiness',
   metricsRoute: '/metrics',
   probesErrorCode: 500,
+  auth: false,
   probesSuccessCode: 200
 }
 
@@ -101,12 +111,12 @@ export const HealthPlugin: Plugin<Partial<HealthPluginOptions>> = {
 
       server.route({
         method: 'GET',
-        // @ts-ignore
         path: config.metricsRoute,
         options: {
           plugins: {
             [pkg.name]: monitorProbes
-          }
+          },
+          auth: getAuth(config, 'metrics')
         },
         handler: function (_, h) {
           return h
@@ -142,7 +152,8 @@ export const HealthPlugin: Plugin<Partial<HealthPluginOptions>> = {
         options: {
           plugins: {
             HealthPlugin: monitorProbes
-          }
+          },
+          auth: getAuth(config, 'liveness')
         },
         handler: async (_, h) => {
           if (config.livenessProbes && Object.keys(config.livenessProbes).length) {
@@ -161,7 +172,8 @@ export const HealthPlugin: Plugin<Partial<HealthPluginOptions>> = {
         options: {
           plugins: {
             HealthPlugin: monitorProbes
-          }
+          },
+          auth: getAuth(config, 'readiness')
         },
         handler: async (_, h) => {
           if (config.readinessProbes && Object.keys(config.readinessProbes).length) {
@@ -207,4 +219,10 @@ async function executePromiseInObject (promiseObject: { [key: string]: () => Pro
     response[entry[0]] = probesResults[index]
   })
   return response
+}
+
+function getAuth (config: HealthPluginOptions, endpointName: string): AuthType {
+  return typeof config.auth === 'object' && typeof config.auth[endpointName] !== 'undefined'
+    ? config.auth[endpointName]
+    : config.auth
 }
