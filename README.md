@@ -116,3 +116,34 @@ Default:
 - _exposeMetrics_: should the metrics endpoint be active. Default to `true` 
 - _probesSuccessCode_: http status code when successfully executes all probes of *liveness* or *readiness* endpoints.Defaults to `200`
 - _probesErrorCode_: http status code when one of the probes of *liveness* or *readiness* endpoints throws an error. Defaults to `500`
+- _auth_: [hapi route auth option](https://hapi.dev/api/?v=19.1.1#-routeoptionsauth). Can either be for all endpoints
+  ```typescript
+  auth: 'simple'
+  ```
+  ```typescript
+  auth: {
+    mode: 'try',
+    strategy: 'jwt'
+  }
+  ```
+  Or for each endpoint:
+  ```typescript
+  auth: {
+    liveness: false,
+    readiness: 'simple',
+    metrics: {
+      mode: 'try',
+      strategies: ['jwt', 'simple']
+    }
+  }
+  ```
+- _metricsName_: metrics naming. Override the default metrics names:
+  ```typescript
+  // Default values
+  metricsName: {
+    requestCounter: 'http_request_count',
+    requestSummary: 'http_request_duration_ms',
+    requestDurationHistogram: 'http_request_duration_seconds',
+    currentRequests: 'http_current_request_count'
+  }
+  ```
