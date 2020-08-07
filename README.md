@@ -26,7 +26,7 @@ const server = new Server({
 
 server.register({
     plugin: HealthPlugin,
-    options: options: {
+    options: {
       livenessProbes: {
         status: () => Promise.resolve('Yeah !')
       },
