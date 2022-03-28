@@ -175,7 +175,7 @@ export const HealthPlugin: Plugin<Partial<HealthPluginOptions>> = {
         path: config.livenessRoute,
         options: {
           plugins: {
-            HealthPlugin: monitorProbes
+            [pkg.name]: monitorProbes
           },
           auth: getAuth(config, 'liveness')
         },
@@ -195,7 +195,7 @@ export const HealthPlugin: Plugin<Partial<HealthPluginOptions>> = {
         path: config.readinessRoute,
         options: {
           plugins: {
-            HealthPlugin: monitorProbes
+            [pkg.name]: monitorProbes
           },
           auth: getAuth(config, 'readiness')
         },
